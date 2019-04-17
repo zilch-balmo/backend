@@ -1,0 +1,164 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.13
+  aws-ecr: circleci/aws-ecr@4.0.1
+
+executors:
+  default:
+    docker:
+      - image: circleci/python:3.7.2
+
+jobs:
+  build:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - checkout
+      - setup_remote_docker
+      # XXX we should be able to cache these steps
+      - aws-cli/install
+      - aws-cli/configure
+      - aws-ecr/ecr-login
+      - run:
+          name: Pull latest image
+          command: |
+            docker pull $AWS_ECR_ACCOUNT_URL/backend:latest
+      - aws-ecr/build-image:
+          repo: backend
+          tag: "${CIRCLE_SHA1}"
+      - run:
+          name: Save image to an archive
+          command: |
+            mkdir -p docker-image
+            docker save -o docker-image/image.tar $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1}
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - backend
+            - docker-image
+
+  lint:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Load image
+          command: |
+            docker load --input docker-image/image.tar
+      - run:
+          name: Run flake8
+          command: |
+            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} lint
+
+  test:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Load image
+          command: |
+            docker load --input docker-image/image.tar
+      - run:
+          name: Pull postgres
+          command: |
+            docker pull postgres:11.2
+      - run:
+          name: Run nosetests
+          command: |
+            docker network create test
+            docker run -d \
+              --name postgres \
+              --network test \
+              -e POSTGRES_DB=backend_test_db \
+              -e POSTGRES_USER=backend \
+              -e POSTGRES_PASSWORD=secret \
+              postgres:11.2
+            docker run --rm \
+              --network test \
+              -e BACKEND__POSTGRES__HOST=postgres \
+              $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} test
+            docker rm --force postgres
+            docker network rm test
+
+  typehinting:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Load image
+          command: |
+            docker load --input docker-image/image.tar
+      - run:
+          name: Run mypy
+          command: |
+            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} typehinting
+
+  push:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/repo
+      - aws-cli/install
+      - aws-cli/configure
+      - aws-ecr/ecr-login
+      - run:
+          name: Load image
+          command: |
+            docker load --input docker-image/image.tar
+      - run:
+          name: Tag image as latest
+          command: |
+            docker tag $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} $AWS_ECR_ACCOUNT_URL/backend:latest
+      - aws-ecr/push-image:
+          repo: backend
+          tag: "${CIRCLE_SHA1}"
+      - aws-ecr/push-image:
+          repo: backend
+          tag: latest
+
+  deploy:
+    working_directory: ~/repo
+    executor: default
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/repo
+      # XXX ECS goes here
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+      - lint:
+          requires:
+            - build
+      - test:
+          requires:
+            - build
+      - typehinting:
+          requires:
+            - build
+      - push:
+          requires:
+            - lint
+            - test
+            - typehinting
+      - deploy:
+          requires:
+            - push
+          filters:
+            branches:
+              only: master

@@ -6,7 +6,7 @@ ENV INSTALL_PATH /code
 RUN mkdir -p $INSTALL_PATH
 WORKDIR $INSTALL_PATH
 
-COPY MANIFEST.in README.md entrypoint.sh requirements.txt setup.cfg setup.py .
+COPY MANIFEST.in README.md entrypoint.sh requirements.txt setup.cfg setup.py $INSTALL_PATH/
 RUN pip install -r requirements.txt .[deploy,lint,test,typehinting]
 COPY backend backend
 
