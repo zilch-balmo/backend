@@ -35,6 +35,9 @@ setup(
         ],
     },
     extras_require=dict(
+        deploy=[
+            "gunicorn>=19.9.0",
+        ],
         dist=[
             "bumpversion>=0.5.3",
             "pip>=19.0.3",

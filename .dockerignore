@@ -1,0 +1,10 @@
+*
+!Dockerfile
+!MANIFEST.in
+!README.md
+!entrypoint.sh
+!requirements.txt
+!setup.cfg
+!setup.py
+!backend
+*backend/tests
