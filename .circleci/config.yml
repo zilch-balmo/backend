@@ -23,7 +23,8 @@ jobs:
       - run:
           name: Pull latest image
           command: |
-            docker pull $AWS_ECR_ACCOUNT_URL/backend:latest
+            docker pull python:3.7.2 || true
+            docker pull $AWS_ECR_ACCOUNT_URL/backend:latest || true
       - aws-ecr/build-image:
           repo: backend
           tag: "${CIRCLE_SHA1}"
