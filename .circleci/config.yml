@@ -31,7 +31,7 @@ jobs:
             docker build \
               -t $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \
               --cache-from python:3.7.3-alpine \
-              --cache-from $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:latest \
               .
       - aws-ecr/build-image:
           repo: backend
