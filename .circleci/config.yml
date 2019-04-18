@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Pull latest image
           command: |
-            docker pull python:3.7.2 || true
+            docker pull python:3.7.3-alpine || true
             docker pull $AWS_ECR_ACCOUNT_URL/backend:latest || true
       - aws-ecr/build-image:
           repo: backend
