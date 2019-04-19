@@ -16,65 +16,88 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      # XXX we should be able to cache these steps
       - aws-cli/install
-      - aws-cli/configure
       - aws-ecr/ecr-login
       - run:
-          name: Pull latest docker images
+          name: Pull python docker image
           command: |
-            docker pull python:3.7.3-alpine || true
+            docker pull python:3.7.3-alpine
+      - run:
+          name: Pull postgres docker image
+          command: |
+            docker pull postgres:latest
+      - run:
+          name: Pull base docker image
+          command: |
+            docker pull $AWS_ECR_ACCOUNT_URL/backend:base || true
+      - run:
+          name: Pull libs docker image
+          command: |
+            docker pull $AWS_ECR_ACCOUNT_URL/backend:libs || true
+      - run:
+          name: Pull code docker image
+          command: |
             docker pull $AWS_ECR_ACCOUNT_URL/backend:latest || true
       - run:
-          name: Build docker image
+          name: Pull test docker image
+          command: |
+            docker pull $AWS_ECR_ACCOUNT_URL/backend:test || true
+      - run:
+          name: Build base docker image
           command: |
             docker build \
-              -t $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \
+              --target base \
               --cache-from python:3.7.3-alpine \
-              --cache-from $AWS_ECR_ACCOUNT_URL/backend:latest \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:base \
+              --tag $AWS_ECR_ACCOUNT_URL/backend:base-${CIRCLE_SHA1} \
               .
       - run:
-          name: Save image to an archive
+          name: Build libs docker image
           command: |
-            mkdir -p docker-image
-            docker save -o docker-image/image.tar $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1}
-      - persist_to_workspace:
-          root: ~/repo
-          paths:
-            - backend
-            - docker-image
-
-  lint:
-    working_directory: ~/repo
-    executor: default
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/repo
+            docker build \
+              --target libs \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:base-${CIRCLE_SHA1} \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:libs \
+              --tag $AWS_ECR_ACCOUNT_URL/backend:libs-${CIRCLE_SHA1} \
+              .
       - run:
-          name: Load image
+          name: Build code docker image
           command: |
-            docker load --input docker-image/image.tar
+            docker build \
+              --target code \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:libs-${CIRCLE_SHA1} \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:latest \
+              --tag $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \
+              .
+      - run:
+          name: Build test docker image
+          command: |
+            docker build \
+              --target test \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \
+              --cache-from $AWS_ECR_ACCOUNT_URL/backend:test \
+              --tag $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1} \
+              .
+      - run:
+          name: Push base docker image
+          command: |
+            docker tag $AWS_ECR_ACCOUNT_URL/backend:base-${CIRCLE_SHA1} $AWS_ECR_ACCOUNT_URL/backend:base
+            docker push $AWS_ECR_ACCOUNT_URL/backend:base-${CIRCLE_SHA1}
+            docker push $AWS_ECR_ACCOUNT_URL/backend:base
+      - run:
+          name: Push libs docker image
+          command: |
+            docker tag $AWS_ECR_ACCOUNT_URL/backend:libs-${CIRCLE_SHA1} $AWS_ECR_ACCOUNT_URL/backend:libs
+            docker push $AWS_ECR_ACCOUNT_URL/backend:libs-${CIRCLE_SHA1}
+            docker push $AWS_ECR_ACCOUNT_URL/backend:libs
       - run:
           name: Run flake8
           command: |
-            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} lint
-
-  test:
-    working_directory: ~/repo
-    executor: default
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/repo
+            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1} flake8 backend
       - run:
-          name: Load image
+          name: Run mypy
           command: |
-            docker load --input docker-image/image.tar
-      - run:
-          name: Pull postgres
-          command: |
-            docker pull postgres:11.2
+            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1} mypy backend
       - run:
           name: Run nosetests
           command: |
@@ -85,55 +108,30 @@ jobs:
               -e POSTGRES_DB=backend_test_db \
               -e POSTGRES_USER=backend \
               -e POSTGRES_PASSWORD=secret \
-              postgres:11.2
-            docker run --rm \
+              postgres:latest
+            docker create --name test \
               --network test \
-              -e BACKEND__POSTGRES__HOST=postgres \
-              $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} test
-            docker rm --force postgres
+              --env BACKEND__POSTGRES__HOST=postgres \
+              --env BACKEND__POSTGRES__PASSWORD=secret \
+              $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1} nosetests backend
+            docker cp ~/repo/backend/tests test:/code/backend/tests
+            docker start --attach test
+            docker stop postgres
+            docker rm postgres
+            docker rm test
             docker network rm test
-
-  typehinting:
-    working_directory: ~/repo
-    executor: default
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/repo
       - run:
-          name: Load image
-          command: |
-            docker load --input docker-image/image.tar
-      - run:
-          name: Run mypy
-          command: |
-            docker run --rm $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} typehinting
-
-  push:
-    working_directory: ~/repo
-    executor: default
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/repo
-      - aws-cli/install
-      - aws-cli/configure
-      - aws-ecr/ecr-login
-      - run:
-          name: Load image
-          command: |
-            docker load --input docker-image/image.tar
-      - run:
-          name: Tag image as latest
+          name: Push code docker image
           command: |
             docker tag $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} $AWS_ECR_ACCOUNT_URL/backend:latest
-      - aws-ecr/push-image:
-          repo: backend
-          tag: "${CIRCLE_SHA1}"
-      - aws-ecr/push-image:
-          repo: backend
-          tag: latest
-
+            docker push $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1}
+            docker push $AWS_ECR_ACCOUNT_URL/backend:latest
+      - run:
+          name: Push test docker image
+          command: |
+            docker tag $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1} $AWS_ECR_ACCOUNT_URL/backend:test
+            docker push $AWS_ECR_ACCOUNT_URL/backend:test-${CIRCLE_SHA1}
+            docker push $AWS_ECR_ACCOUNT_URL/backend:test
   deploy:
     working_directory: ~/repo
     executor: default
@@ -141,30 +139,15 @@ jobs:
       - setup_remote_docker
       - attach_workspace:
           at: ~/repo
-      # XXX ECS goes here
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       - build
-      - lint:
-          requires:
-            - build
-      - test:
-          requires:
-            - build
-      - typehinting:
-          requires:
-            - build
-      - push:
-          requires:
-            - lint
-            - test
-            - typehinting
       - deploy:
           requires:
-            - push
+            - build
           filters:
             branches:
               only: master
