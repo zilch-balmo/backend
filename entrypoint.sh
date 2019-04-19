@@ -1,12 +1,6 @@
 #!/bin/bash -e
 
-if [ "$1" = "lint" ]; then
-    exec flake8 backend
-elif [ "$1" = "test" ]; then
-    exec nosetests backend
-elif [ "$1" = "typehinting" ]; then
-    exec mypy backend
-elif [ "$1" = "server" ]; then
+if [ "$1" = "server" ]; then
     exec gunicorn \
 	 --access-logfile - \
 	 --bind 0.0.0.0:80 \
