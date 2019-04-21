@@ -36,8 +36,6 @@ setup(
     },
     extras_require=dict(
         deploy=[
-            "gevent>=1.4.0",
-            "gunicorn>=19.9.0",
             "uwsgi>=2.0.18",
         ],
         dist=[
