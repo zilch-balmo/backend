@@ -18,10 +18,10 @@ from backend.config import load_default_config
 def load_secrets(metadata):
     try:
         session = Session()
-        secretsmanager = session("secretsmanager")
+        secretsmanager = session.client("secretsmanager")
         response = secretsmanager.get_secret_value(
             SecretId="secrets//backend",
-            VersionStage="AWSCURENT",
+            VersionStage="AWSCURRENT",
         )
         print(response)  # noqa
         data = loads(response["SecretString"])
