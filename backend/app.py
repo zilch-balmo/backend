@@ -37,7 +37,7 @@ def create_app(debug=False, testing=False, model_only=False):
         loader=partitioned_loader,
     )
 
-    print(graph.config.postgres)
+    print(graph.config.postgres)  # noqa
 
     graph.use(
         "logging",
