@@ -38,14 +38,14 @@ def create_app(debug=False, testing=False, model_only=False):
 
     graph.use(
         "logging",
+        "postgres",
+        "sessionmaker",
+        "session_factory",
     )
 
     if testing:
         graph.use(
             "account_store",
-            "postgres",
-            "sessionmaker",
-            "session_factory",
         )
 
     if not model_only:
@@ -57,12 +57,12 @@ def create_app(debug=False, testing=False, model_only=False):
             "health_convention",
             "landing_convention",
             "port_forwarding",
+            "postgres_health_check",
+            "swagger_convention",
         )
 
         if testing:
             graph.use(
-                "postgres_health_check",
-                "swagger_convention",
                 # routes
                 "account_routes",
             )
