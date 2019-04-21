@@ -52,7 +52,7 @@ def create_app(debug=False, testing=False, model_only=False):
             "health_convention",
             "landing_convention",
             "port_forwarding",
-            "postgres_health_check",
+            # XXX "postgres_health_check",
             "swagger_convention",
             # routes
             "account_routes",
