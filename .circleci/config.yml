@@ -66,6 +66,8 @@ jobs:
           command: |
             docker build \
               --target code \
+              --build-arg BUILD_NUM=${CIRCLE_BUILD_NUM} \
+              --build-arg SHA1=${CIRCLE_SHA1} \
               --cache-from $AWS_ECR_ACCOUNT_URL/backend:libs-${CIRCLE_SHA1} \
               --cache-from $AWS_ECR_ACCOUNT_URL/backend:latest \
               --tag $AWS_ECR_ACCOUNT_URL/backend:${CIRCLE_SHA1} \

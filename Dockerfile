@@ -17,6 +17,10 @@ CMD ["server"]
 
 # code: copy in the code
 FROM libs AS code
+ARG BUILD_NUM
+ARG SHA1
+ENV BACKEND__BUILD_INFO__BUILD_NUM ${BUILD_NUM}
+ENV BACKEND__BUILD_INFO__SHA1 ${SHA1}
 COPY backend backend
 
 

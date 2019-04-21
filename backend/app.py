@@ -24,13 +24,10 @@ def create_app(debug=False, testing=False, model_only=False):
         load_from_json_file,
     )
 
-    if False:
-        partitioned_loader = load_config_and_secrets(
-            config=config_loader,
-            secrets=load_from_secretsmanager(),
-        )
-    else:
-        partitioned_loader = config_loader
+    partitioned_loader = load_config_and_secrets(
+        config=config_loader,
+        secrets=load_from_secretsmanager(),
+    )
 
     graph = create_object_graph(
         name=__name__.split(".")[0],
