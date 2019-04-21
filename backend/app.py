@@ -7,7 +7,7 @@ from microcosm.loaders import load_each, load_from_environ, load_from_json_file
 from microcosm.loaders.compose import load_config_and_secrets
 from microcosm_secretsmanager.loaders.conventions import load_from_secretsmanager
 
-# import backend.postgres  # noqa: F401
+import backend.postgres  # noqa: F401
 import backend.routes  # noqa: F401
 import backend.stores  # noqa: F401
 from backend.config import load_default_config
@@ -40,12 +40,16 @@ def create_app(debug=False, testing=False, model_only=False):
     )
 
     graph.use(
-        # XXX "account_store",
         "logging",
-        # XXX "postgres",
-        # XXX "sessionmaker",
-        # XXX "session_factory",
     )
+
+    if testing:
+        graph.use(
+            "account_store",
+            "postgres",
+            "sessionmaker",
+            "session_factory",
+        )
 
     if not model_only:
         graph.use(
@@ -56,10 +60,14 @@ def create_app(debug=False, testing=False, model_only=False):
             "health_convention",
             "landing_convention",
             "port_forwarding",
-            # XXX "postgres_health_check",
-            # XXX "swagger_convention",
-            # routes
-            # XXX "account_routes",
         )
+
+        if testing:
+            graph.use(
+                "postgres_health_check",
+                "swagger_convention",
+                # routes
+                "account_routes",
+            )
 
     return graph.lock()
