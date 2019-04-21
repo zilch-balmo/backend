@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
   aws-ecr: circleci/aws-ecr@4.0.1
+  aws-ecr: circleci/aws-ecs@0.0.7
 
 executors:
   default:
@@ -139,6 +140,12 @@ jobs:
       - setup_remote_docker
       - attach_workspace:
           at: ~/repo
+      - aws-cli/install
+      - aws-ecs/update-service:
+          family: "backend"
+          cluster-name: "zilch-backend"
+          container-image-name-updates: "container=backend,tag=${CIRCLE_SHA1}"
+          verify-revision-is-deployed : false
 
 workflows:
   version: 2
