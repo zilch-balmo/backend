@@ -2,9 +2,10 @@
 
 if [ "$1" = "uwsgi" ] || [ "$1" = "server" ]; then
     exec uwsgi \
+	 --http 0.0.0.0:80 \
 	 --http-uid nobody \
 	 --http-gid nobody \
-	 --http 0.0.0.0:80 \
+	 --http-workers 2 \
 	 --module backend.wsgi:app
 elif [ "$1" = "gunicorn" ]; then
     exec gunicorn \
@@ -13,7 +14,7 @@ elif [ "$1" = "gunicorn" ]; then
 	 --log-level DEBUG \
 	 --user nobody \
 	 --group nobody \
-	 --workers 4 \
+	 --workers 2 \
 	 --worker-class gevent \
 	 --timeout 6 \
 	 --graceful-timeout 6 \
