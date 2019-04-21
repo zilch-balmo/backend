@@ -7,6 +7,7 @@ if [ "$1" = "server" ]; then
 	 --user nobody \
 	 --group nobody \
 	 --workers 4 \
+	 --worker-class gevent \
 	 --timeout 6 \
 	 --graceful-timeout 6 \
 	 "backend.wsgi:app"
