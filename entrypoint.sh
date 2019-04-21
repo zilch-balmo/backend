@@ -2,7 +2,11 @@
 
 
 if [ "$1" = "server" ]; then
-    exec uwsgi --http 127.0.0.1:5000 --module backend.wsgi:app
+    exec uwsgi \
+	 --uid nobody \
+	 --gid nobody \
+	 --http 0.0.0.0:80 \
+	 --module backend.wsgi:app
 elif [ "$1" = "gunicorn" ]; then
     exec gunicorn \
 	 --access-logfile - \
