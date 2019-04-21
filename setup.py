@@ -24,7 +24,6 @@ setup(
         "microcosm-flask>=1.22.0",
         "microcosm-logging>=1.5.0",
         "microcosm-postgres>=1.15.4",
-        "microcosm-secretsmanager>=1.1.0",
         "pyOpenSSL>=19.0.0",
     ],
     entry_points={

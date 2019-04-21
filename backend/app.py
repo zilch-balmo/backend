@@ -23,12 +23,9 @@ def load_secrets(metadata):
             SecretId="secrets//backend",
             VersionStage="AWSCURRENT",
         )
-        print(response)  # noqa
         data = loads(response["SecretString"])
-        print(data)  # noqa
         return data.get("config", {})
-    except Exception as error:
-        print("!!!!", error)  # noqa
+    except Exception:
         return {}
 
 
@@ -41,7 +38,6 @@ def create_app(debug=False, testing=False, model_only=False):
         load_default_config,
         load_from_environ,
         load_from_json_file,
-        load_secrets,
     )
 
     partitioned_loader = load_config_and_secrets(
