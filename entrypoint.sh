@@ -2,6 +2,8 @@
 
 
 if [ "$1" = "server" ]; then
+    exec uwsgi --http 127.0.0.1:5000 --module backend.wsgi:app
+elif [ "$1" = "gunicorn" ]; then
     exec gunicorn \
 	 --access-logfile - \
 	 --bind 0.0.0.0:80 \
@@ -12,7 +14,7 @@ if [ "$1" = "server" ]; then
 	 --worker-class gevent \
 	 --timeout 6 \
 	 --graceful-timeout 6 \
-	 "backend.wsgi:app"
+	 backend.wsgi:app
 elif [ "$1" = "shell" ]; then
     exec /bin/bash
 else

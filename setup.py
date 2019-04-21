@@ -38,6 +38,7 @@ setup(
         deploy=[
             "gevent>=1.4.0",
             "gunicorn>=19.9.0",
+            "uwsgi>=2.0.18",
         ],
         dist=[
             "bumpversion>=0.5.3",
