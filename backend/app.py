@@ -18,16 +18,24 @@ def create_app(debug=False, testing=False, model_only=False):
     Create the object graph for the application.
 
     """
-    config_loader = load_each(
-        load_default_config,
-        load_from_environ,
-        load_from_json_file,
-    )
+    if False:
+        config_loader = load_each(
+            load_default_config,
+            load_from_environ,
+            load_from_json_file,
+        )
 
-    partitioned_loader = load_config_and_secrets(
-        config=config_loader,
-        secrets=load_from_secretsmanager(),
-    )
+        partitioned_loader = load_config_and_secrets(
+            config=config_loader,
+            secrets=load_from_secretsmanager(),
+        )
+    else:
+        partitioned_loader = load_each(
+            load_default_config,
+            load_from_environ,
+            load_from_json_file,
+            load_from_secretsmanager(),
+        )
 
     graph = create_object_graph(
         name=__name__.split(".")[0],
@@ -41,12 +49,9 @@ def create_app(debug=False, testing=False, model_only=False):
         "postgres",
         "sessionmaker",
         "session_factory",
+        # stores
+        "account_store",
     )
-
-    if testing:
-        graph.use(
-            "account_store",
-        )
 
     if not model_only:
         graph.use(
@@ -59,12 +64,8 @@ def create_app(debug=False, testing=False, model_only=False):
             "port_forwarding",
             "postgres_health_check",
             "swagger_convention",
+            # routes
+            "account_routes",
         )
-
-        if testing:
-            graph.use(
-                # routes
-                "account_routes",
-            )
 
     return graph.lock()
