@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
   aws-ecr: circleci/aws-ecr@4.0.1
-  aws-ecr: circleci/aws-ecs@0.0.7
+  aws-ecs: circleci/aws-ecs@0.0.7
 
 executors:
   default:
