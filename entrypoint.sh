@@ -1,16 +1,15 @@
 #!/bin/bash -e
 
-
-if [ "$1" = "-" ]; then
+if [ "$1" = "uwsgi" ] || [ "$1" = "server" ]; then
     exec uwsgi \
 	 --uid nobody \
 	 --gid nobody \
 	 --http 0.0.0.0:8080 \
 	 --module backend.wsgi:app
-elif [ "$1" = "server" ]; then
+elif [ "$1" = "gunicorn" ]; then
     exec gunicorn \
 	 --access-logfile - \
-	 --bind 0.0.0.0:80 \
+	 --bind 0.0.0.0:8080 \
 	 --log-level DEBUG \
 	 --user nobody \
 	 --group nobody \
