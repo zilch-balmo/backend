@@ -2,14 +2,14 @@
 
 if [ "$1" = "uwsgi" ] || [ "$1" = "server" ]; then
     exec uwsgi \
-	 --uid nobody \
-	 --gid nobody \
-	 --http 0.0.0.0:8080 \
+	 --http-uid nobody \
+	 --http-gid nobody \
+	 --http 0.0.0.0:80 \
 	 --module backend.wsgi:app
 elif [ "$1" = "gunicorn" ]; then
     exec gunicorn \
 	 --access-logfile - \
-	 --bind 0.0.0.0:8080 \
+	 --bind 0.0.0.0:80 \
 	 --log-level DEBUG \
 	 --user nobody \
 	 --group nobody \
