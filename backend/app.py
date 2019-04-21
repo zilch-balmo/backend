@@ -2,9 +2,6 @@
 Create the application.
 
 """
-from json import loads
-
-from boto3 import Session
 from microcosm.api import create_object_graph
 from microcosm.loaders import load_each, load_from_environ, load_from_json_file
 from microcosm.loaders.compose import load_config_and_secrets
@@ -13,20 +10,7 @@ import backend.postgres  # noqa: F401
 import backend.routes  # noqa: F401
 import backend.stores  # noqa: F401
 from backend.config import load_default_config
-
-
-def load_secrets(metadata):
-    try:
-        session = Session()
-        secretsmanager = session.client("secretsmanager")
-        response = secretsmanager.get_secret_value(
-            SecretId="secrets//backend",
-            VersionStage="AWSCURRENT",
-        )
-        data = loads(response["SecretString"])
-        return data.get("config", {})
-    except Exception:
-        return {}
+from backend.secrets import load_secrets
 
 
 def create_app(debug=False, testing=False, model_only=False):
