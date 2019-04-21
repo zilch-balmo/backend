@@ -8,9 +8,10 @@ WORKDIR $INSTALL_PATH
 
 # libs: install dependencies
 FROM base AS libs
-COPY MANIFEST.in README.md entrypoint.sh requirements.txt setup.cfg setup.py $INSTALL_PATH/
+COPY MANIFEST.in README.md requirements.txt setup.cfg setup.py $INSTALL_PATH/
 RUN pip install -r requirements.txt .[deploy]
 
+COPY entrypoint.sh $INSTALL_PATH/
 ENTRYPOINT ["/code/entrypoint.sh"]
 CMD ["server"]
 

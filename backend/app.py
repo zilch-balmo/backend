@@ -7,7 +7,7 @@ from microcosm.loaders import load_each, load_from_environ, load_from_json_file
 from microcosm.loaders.compose import load_config_and_secrets
 from microcosm_secretsmanager.loaders.conventions import load_from_secretsmanager
 
-import backend.postgres  # noqa: F401
+# import backend.postgres  # noqa: F401
 import backend.routes  # noqa: F401
 import backend.stores  # noqa: F401
 from backend.config import load_default_config
@@ -23,10 +23,14 @@ def create_app(debug=False, testing=False, model_only=False):
         load_from_environ,
         load_from_json_file,
     )
-    partitioned_loader = load_config_and_secrets(
-        config=config_loader,
-        secrets=load_from_secretsmanager(),
-    )
+
+    if False:
+        partitioned_loader = load_config_and_secrets(
+            config=config_loader,
+            secrets=load_from_secretsmanager(),
+        )
+    else:
+        partitioned_loader = config_loader
 
     graph = create_object_graph(
         name=__name__.split(".")[0],
@@ -36,11 +40,11 @@ def create_app(debug=False, testing=False, model_only=False):
     )
 
     graph.use(
-        "account_store",
+        # XXX "account_store",
         "logging",
-        "postgres",
-        "sessionmaker",
-        "session_factory",
+        # XXX "postgres",
+        # XXX "sessionmaker",
+        # XXX "session_factory",
     )
 
     if not model_only:
@@ -53,9 +57,9 @@ def create_app(debug=False, testing=False, model_only=False):
             "landing_convention",
             "port_forwarding",
             # XXX "postgres_health_check",
-            "swagger_convention",
+            # XXX "swagger_convention",
             # routes
-            "account_routes",
+            # XXX "account_routes",
         )
 
     return graph.lock()
