@@ -1,13 +1,13 @@
 #!/bin/bash -e
 
-if [ "$1" = "uwsgi" ] || [ "$1" = "server" ]; then
+if [ "$1" = "uwsgi" ]; then
     exec uwsgi \
 	 --http 0.0.0.0:80 \
 	 --http-uid nobody \
 	 --http-gid nobody \
 	 --http-workers 2 \
 	 --module backend.wsgi:app
-elif [ "$1" = "gunicorn" ]; then
+elif [ "$1" = "gunicorn" ] || [ "$1" = "server" ]; then
     exec gunicorn \
 	 --access-logfile - \
 	 --bind 0.0.0.0:80 \
@@ -16,8 +16,8 @@ elif [ "$1" = "gunicorn" ]; then
 	 --group nobody \
 	 --workers 2 \
 	 --worker-class gevent \
-	 --timeout 6 \
-	 --graceful-timeout 6 \
+	 --timeout 10 \
+	 --graceful-timeout 10 \
 	 backend.wsgi:app
 elif [ "$1" = "shell" ]; then
     exec /bin/bash
