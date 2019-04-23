@@ -1,6 +1,6 @@
 # base: start with Alpine, install postgres dependencies
 FROM python:3.7.3-alpine AS base
-RUN apk update && apk add bash build-base postgresql-dev libffi-dev
+RUN apk update && apk add bash build-base postgresql-dev libffi-dev pcre-dev
 
 ENV INSTALL_PATH /code
 RUN mkdir -p $INSTALL_PATH
