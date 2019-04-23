@@ -5,12 +5,22 @@ Create the application.
 from microcosm.api import create_object_graph
 from microcosm.loaders import load_each, load_from_environ, load_from_json_file
 from microcosm.loaders.compose import load_config_and_secrets
+from microcosm.metadata import Metadata
 
 import backend.postgres  # noqa: F401
 import backend.routes  # noqa: F401
 import backend.stores  # noqa: F401
 from backend.config import load_default_config
-from backend.secrets import load_secrets
+
+
+def load_secrets(metadata):
+    """
+    Load secrets using injected environment variables.
+
+    Generate an "internal" naming prefix to differentiate secrets from other config.
+
+    """
+    return load_from_environ(Metadata(f"_{metadata.name}"))
 
 
 def create_app(debug=False, testing=False, model_only=False):
