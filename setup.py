@@ -20,7 +20,6 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
-        "boto3>=1.9.131",
         "microcosm>=2.6.0",
         "microcosm-flask>=1.22.0",
         "microcosm-logging>=1.5.0",
