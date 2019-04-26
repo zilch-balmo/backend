@@ -145,7 +145,7 @@ jobs:
       - aws-cli/install
       - aws-ecs/update-service:
           family: "backend"
-          cluster-name: "zilch-backend"
+          cluster-name: "zilch"
           container-image-name-updates: "container=backend,tag=${CIRCLE_SHA1}"
           verify-revision-is-deployed : false
 
