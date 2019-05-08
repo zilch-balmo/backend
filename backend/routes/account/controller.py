@@ -23,6 +23,7 @@ class AccountController(CRUDStoreAdapter):
         )
 
     def search(self, offset, limit, **kwargs):
-        from flask import request
-        self.logger.info(f"Request headers:\n{request.headers}")
         return super().search(offset, limit, **kwargs)
+
+    def retrieve(self, **kwargs):
+        return super().retrieve(**kwargs)

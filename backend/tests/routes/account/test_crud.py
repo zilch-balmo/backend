@@ -17,6 +17,7 @@ from microcosm_postgres.operations import recreate_all
 
 from backend.app import create_app
 from backend.models.account import Account
+from backend.tests.routes.fixtures import ADMIN_TOKEN, USER_TOKEN
 
 
 class TestAccountRoutes:
@@ -42,7 +43,12 @@ class TestAccountRoutes:
 
         uri = "/api/v1/account"
 
-        response = self.client.get(uri)
+        response = self.client.get(
+            uri,
+            headers={
+                "x-amzn-oidc-data": ADMIN_TOKEN,
+            },
+        )
 
         assert_that(response.status_code, is_(equal_to(200)))
         assert_that(
@@ -84,7 +90,12 @@ class TestAccountRoutes:
 
         uri = f"/api/v1/account/{self.account.id}"
 
-        response = self.client.get(uri)
+        response = self.client.get(
+            uri,
+            headers={
+                "x-amzn-oidc-data": USER_TOKEN,
+            },
+        )
 
         assert_that(
             response.json,
